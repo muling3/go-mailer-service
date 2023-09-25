@@ -1,52 +1,67 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-
-	"github.com/streadway/amqp"
-
+	"log"
 	"os"
-	"time"
+
+	"github.com/muling3/go-mailer/mail"
+	"github.com/muling3/go-mailer/models"
+	"github.com/spf13/viper"
+	"github.com/streadway/amqp"
 )
 
 func main() {
-	url := os.Getenv("CLOUDAMQP_URL")
-	if url == "" {
-		url = "amqp://localhost"
+	config, err := envConfig()
+	if err != nil {
+		log.Fatal("Error reading application config ", err)
+		os.Exit(1)
 	}
-	connection, _ := amqp.Dial(url)
+
+	fmt.Printf("%+v", config)
+
+	connection, _ := amqp.Dial(config.BrokerUrl)
 	defer connection.Close()
+
 	go func(con *amqp.Connection) {
 		channel, _ := connection.Channel()
 		defer channel.Close()
-		durable, exclusive := false, false
-		autoDelete, noWait := true, true
-		q, _ := channel.QueueDeclare("test", durable, autoDelete, exclusive, noWait, nil)
-		channel.QueueBind(q.Name, "#", "amq.topic", false, nil)
+		durable, exclusive := true, false
+		autoDelete, noWait := false, true
+		q, _ := channel.QueueDeclare(config.QueueName, durable, autoDelete, exclusive, noWait, nil)
+		channel.QueueBind(q.Name, config.RoutingKey, config.Topic, false, nil)
 		autoAck, exclusive, noWait, noLocal := false, false, false, false
 		messages, _ := channel.Consume(q.Name, "", autoAck, exclusive, noLocal, noWait, nil)
-		multiAck := false
+		// multiAck := false
 		for msg := range messages {
 			fmt.Println("Body:", string(msg.Body), "Timestamp:", msg.Timestamp)
-			msg.Ack(multiAck)
-		}
-	}(connection)
+			// mailMessage
+			mailMessage := models.MailMessage{}
+			json.Unmarshal(msg.Body, &mailMessage)
 
-	go func(con *amqp.Connection) {
-		timer := time.NewTicker(1 * time.Second)
-		channel, _ := connection.Channel()
-
-		for t := range timer.C {
-			msg := amqp.Publishing{
-				DeliveryMode: 1,
-				Timestamp:    t,
-				ContentType:  "text/plain",
-				Body:         []byte("Hello world"),
-			}
-			mandatory, immediate := false, false
-			channel.Publish("amq.topic", "ping", mandatory, immediate, msg)
+			// msg.Ack(multiAck)
+			mail.SendEmail(mailMessage, config)
 		}
 	}(connection)
 
 	select {}
+}
+
+func envConfig() (config models.Config, err error) {
+	viper.SetConfigName("env")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+
+	viper.AutomaticEnv()
+
+	err = viper.ReadInConfig()
+
+	if err != nil {
+		return
+	}
+
+	err = viper.Unmarshal(&config)
+	return
+
 }

@@ -1,0 +1,8 @@
+EMAILHOST: localhost
+EMAILPORT: 1025
+EMAILUSER: ""
+EMAILPASSWORD: ""
+BROKERURL: amqp://localhost
+QUEUENAME: mail_queue
+TOPIC: mail_topic
+ROUTINGKEY: mail_key
