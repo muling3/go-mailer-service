@@ -35,7 +35,7 @@ func initEmail(config models.Config) smtp.Auth {
 	password := config.EmailPassword
 
 	// smtp server configuration.
-	smtpServer := models.SmtpServer{Host: "localhost", Port: "1025"}
+	smtpServer := models.SmtpServer{Host: config.EmailHost, Port: fmt.Sprintf("%d", config.EmailPort)}
 
 	// Authentication.
 	auth := smtp.PlainAuth("", from, password, smtpServer.Host)

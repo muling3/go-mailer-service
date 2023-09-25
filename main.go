@@ -49,7 +49,7 @@ func main() {
 }
 
 func envConfig() (config models.Config, err error) {
-	viper.SetConfigName("env")
+	viper.SetConfigName("environment")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
 
