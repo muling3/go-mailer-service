@@ -9,6 +9,7 @@ type Config struct {
 	QueueName     string `mapstructure: "QUEUENAME"`
 	Topic         string `mapstructure: "TOPIC"`
 	RoutingKey    string `mapstructure: "ROUTINGKEY"`
+	MongoUri      string `mapstructure: "MONGOURI"`
 }
 
 type MailMessage struct {

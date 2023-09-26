@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/muling3/go-mailer/db"
 	"github.com/muling3/go-mailer/mail"
 	"github.com/muling3/go-mailer/models"
 	"github.com/spf13/viper"
@@ -14,6 +15,10 @@ import (
 
 func main() {
 	config, err := envConfig()
+
+	// connect to db
+	client := db.ConnectToDb(config)
+
 	if err != nil {
 		log.Fatal("Error reading application config ", err)
 		os.Exit(1)
@@ -41,7 +46,7 @@ func main() {
 			json.Unmarshal(msg.Body, &mailMessage)
 
 			// msg.Ack(multiAck)
-			mail.SendEmail(mailMessage, config)
+			mail.SendEmail(mailMessage, config, client)
 		}
 	}(connection)
 

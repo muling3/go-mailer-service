@@ -1,13 +1,16 @@
 package mail
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/smtp"
 
 	"github.com/muling3/go-mailer/models"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SendEmail(message models.MailMessage, config models.Config) {
+func SendEmail(message models.MailMessage, config models.Config, client *mongo.Client) {
 	auth := initEmail(config)
 
 	// smtp server configuration.
@@ -28,6 +31,16 @@ func SendEmail(message models.MailMessage, config models.Config) {
 	}
 	fmt.Println("Email Sent!")
 
+	// save a copy of the the message to the db
+	coll := client.Database("logs").Collection("ecommerce_mail_messages")
+
+	result, err := coll.InsertOne(context.Background(), message)
+
+	if err != nil {
+		log.Fatalf("Error Listing Databases %v", err)
+	}
+
+	fmt.Printf("-> %s", result)
 }
 
 func initEmail(config models.Config) smtp.Auth {

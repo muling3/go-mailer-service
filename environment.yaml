@@ -6,3 +6,4 @@ BROKERURL: amqp://localhost
 QUEUENAME: mail_queue
 TOPIC: mail_topic
 ROUTINGKEY: mail_key
+MONGOURI: mongodb://root:password@localhost:27017/?maxPoolSize=20&w=majority
