@@ -8,7 +8,23 @@ import (
 
 	"github.com/muling3/go-mailer/models"
 	"go.mongodb.org/mongo-driver/mongo"
+	"gopkg.in/gomail.v2"
 )
+
+func SendMailUsingGoMail(message models.MailMessage, config models.Config, client *mongo.Client) {
+	m := gomail.NewMessage()
+	m.SetHeader("From", message.FromAddress)
+	m.SetHeader("To", message.ToAddress)
+	m.SetHeader("Subject", message.Subject)
+	m.SetBody("text/html", message.Body)
+
+	d := gomail.NewDialer(config.EmailHost, config.EmailPort, message.FromAddress, config.EmailPassword)
+
+	// Send the email
+	if err := d.DialAndSend(m); err != nil {
+		panic(err)
+	}
+}
 
 func SendEmail(message models.MailMessage, config models.Config, client *mongo.Client) {
 	auth := initEmail(config)
@@ -32,7 +48,7 @@ func SendEmail(message models.MailMessage, config models.Config, client *mongo.C
 	fmt.Println("Email Sent!")
 
 	// save a copy of the the message to the db
-	coll := client.Database("logs").Collection("ecommerce_mail_messages")
+	coll := client.Database("logs").Collection("ecommerce-mails")
 
 	result, err := coll.InsertOne(context.Background(), message)
 

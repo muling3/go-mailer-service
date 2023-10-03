@@ -47,6 +47,7 @@ func main() {
 
 			// msg.Ack(multiAck)
 			mail.SendEmail(mailMessage, config, client)
+			// mail.SendMailUsingGoMail(mailMessage, config, client)
 		}
 	}(connection)
 
