@@ -38,16 +38,16 @@ func main() {
 		channel.QueueBind(q.Name, config.RoutingKey, config.Topic, false, nil)
 		autoAck, exclusive, noWait, noLocal := false, false, false, false
 		messages, _ := channel.Consume(q.Name, "", autoAck, exclusive, noLocal, noWait, nil)
-		// multiAck := false
+		multiAck := true
 		for msg := range messages {
 			fmt.Println("Body:", string(msg.Body), "Timestamp:", msg.Timestamp)
 			// mailMessage
 			mailMessage := models.MailMessage{}
 			json.Unmarshal(msg.Body, &mailMessage)
 
-			// msg.Ack(multiAck)
-			mail.SendEmail(mailMessage, config, client)
-			// mail.SendMailUsingGoMail(mailMessage, config, client)
+			msg.Ack(multiAck)
+			// mail.SendEmail(mailMessage, config, client)
+			mail.SendMailUsingGoMail(mailMessage, config, client)
 		}
 	}(connection)
 

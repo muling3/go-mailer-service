@@ -13,17 +13,28 @@ import (
 
 func SendMailUsingGoMail(message models.MailMessage, config models.Config, client *mongo.Client) {
 	m := gomail.NewMessage()
-	m.SetHeader("From", message.FromAddress)
+	m.SetHeader("From", config.EmailUser)
 	m.SetHeader("To", message.ToAddress)
 	m.SetHeader("Subject", message.Subject)
 	m.SetBody("text/html", message.Body)
 
-	d := gomail.NewDialer(config.EmailHost, config.EmailPort, message.FromAddress, config.EmailPassword)
+	d := gomail.NewDialer(config.EmailHost, config.EmailPort, config.EmailUser, config.EmailPassword)
 
 	// Send the email
 	if err := d.DialAndSend(m); err != nil {
 		panic(err)
 	}
+
+	// save a copy of the the message to the db
+	coll := client.Database("logs").Collection("ecommerce-mails")
+
+	result, err := coll.InsertOne(context.Background(), message)
+
+	if err != nil {
+		log.Fatalf("Error Listing Databases %v", err)
+	}
+
+	fmt.Printf("-> %s", result)
 }
 
 func SendEmail(message models.MailMessage, config models.Config, client *mongo.Client) {
